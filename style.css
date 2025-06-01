@@ -1,0 +1,675 @@
+/*
+Theme Name: 10wuensche Web Vitals Theme
+Theme URI: https://10wuensche.ch
+Author: Your Name
+Description: A fast, Web Vitals optimized WordPress theme
+Version: 1.0
+License: GPL v2 or later
+Text Domain: textdomain
+*/
+
+/* Reset and base styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global container for consistent alignment */
+.site-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+/* Header styles */
+.site-header {
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 10;
+}
+
+/* Header container - REMOVED PADDING TO ENSURE ALIGNMENT */
+.header-container {
+    display: block;
+    padding: 0;
+}
+
+/* Logo section */
+.site-branding {
+    padding: 0.375rem 0;
+}
+
+.site-logo {
+    display: inline-block;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: inherit;
+}
+
+.site-logo:hover {
+    text-decoration: none;
+}
+
+/* Navigation container - ADDED NEGATIVE MARGINS TO COMPENSATE FOR ARROWS */
+.main-navigation {
+    position: relative;
+    margin-left: -48px;
+    margin-right: -48px;
+    padding-left: 48px;
+    padding-right: 48px;
+}
+
+.nav-scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+.nav-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+.menu-items,
+.main-navigation > ul {
+    display: flex;
+    align-items: center;
+    height: 3rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    white-space: nowrap;
+}
+
+/* Navigation items */
+.menu-item {
+    margin: 0;
+}
+
+.menu-item a {
+    display: block;
+    height: 3rem;
+    padding: 0 1.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #4b5563;
+    text-decoration: none;
+    white-space: nowrap;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* First menu item removes left padding to align with logo */
+.menu-item:first-child a {
+    padding-left: 0;
+}
+
+.menu-item a:hover {
+    color: #111827;
+}
+
+.menu-item.current-menu-item a,
+.menu-item.current_page_item a {
+    color: #000000;
+}
+
+.menu-item.current-menu-item a::after,
+.menu-item.current_page_item a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #000000;
+}
+
+/* Navigation arrows - YouTube style */
+.nav-arrow {
+    position: absolute;
+    top: 0;
+    height: 48px;
+    width: 48px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+}
+
+.nav-arrow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 60px;
+    pointer-events: none;
+}
+
+.nav-arrow-left::before {
+    right: 0;
+    background: linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+}
+
+.nav-arrow-right::before {
+    left: 0;
+    background: linear-gradient(to left, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+}
+
+.nav-arrow:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+.nav-arrow svg {
+    width: 16px;
+    height: 16px;
+    color: #606060;
+}
+
+.nav-arrow-left {
+    left: 0;
+}
+
+.nav-arrow-right {
+    right: 0;
+}
+
+/* Content area */
+.site-content {
+    padding: 1.5rem 0;
+    min-height: calc(100vh - 60px);
+}
+
+/* Page and post titles */
+.entry-title,
+.page-title {
+    margin: 0 0 1.5rem 0;
+    font-size: 2.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+/* Meta description below title */
+.page-meta-description {
+    margin-bottom: 1.5rem;
+    font-size: 1.125rem;
+    line-height: 1.75;
+    color: #4b5563;
+    font-weight: 400;
+}
+
+/* Subtitle H2 */
+.page-subtitle-h2 {
+    margin: 2rem 0 1rem 0;
+    font-size: 2rem;
+    line-height: 1.3;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Subtitle H3 */
+.page-subtitle-h3 {
+    margin: 2rem 0 1rem 0;
+    font-size: 1.5rem;
+    line-height: 1.4;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Content sections */
+.page-content-1,
+.page-content-2 {
+    margin: 1.5rem 0;
+    line-height: 1.75;
+}
+
+.page-content-1 p,
+.page-content-2 p {
+    margin-bottom: 1.25rem;
+}
+
+.page-content-1 p:last-child,
+.page-content-2 p:last-child {
+    margin-bottom: 0;
+}
+
+/* FAQ Title */
+.faq-title {
+    margin: 2.5rem 0 1.5rem 0;
+    font-size: 1.75rem;
+    line-height: 1.3;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* FAQ Section */
+.faq-section {
+    margin: 1.5rem 0;
+}
+
+.faq-item {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.faq-item:last-child {
+    border-bottom: none;
+}
+
+.faq-last-updated {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 1.5rem;
+}
+
+.faq-question {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    font-weight: 600;
+    color: #111827;
+}
+
+.faq-answer {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: #374151;
+}
+
+.faq-answer p {
+    margin-bottom: 1rem;
+}
+
+.faq-answer p:last-child {
+    margin-bottom: 0;
+}
+
+/* Share Article Section */
+.share-article {
+    margin: 3rem 0 2rem 0;
+}
+
+.share-article h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.share-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.share-button {
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.share-facebook {
+    background: #1877f2;
+    color: white;
+}
+
+.share-facebook:hover {
+    background: #166fe5;
+}
+
+.share-x {
+    background: #000000;
+    color: white;
+}
+
+.share-x:hover {
+    background: #1a1a1a;
+}
+
+.share-email {
+    background: #6b7280;
+    color: white;
+}
+
+.share-email:hover {
+    background: #4b5563;
+}
+
+/* Image */
+.page-image {
+    margin: 1.5rem 0;
+}
+
+.page-image img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Internal Links Section */
+.internal-links-section {
+    margin: 2.5rem 0;
+}
+
+.internal-links-section h3 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.5rem;
+    color: #111827;
+}
+
+.internal-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.internal-link-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.internal-link-item:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateX(4px);
+}
+
+.link-arrow {
+    font-size: 1.25rem;
+    color: #9ca3af;
+    margin-right: 0.75rem;
+}
+
+.link-text {
+    font-weight: 500;
+}
+
+/* Wishes Box Styles */
+.wishes-box {
+    margin: 2rem 0;
+}
+
+.wish-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.wish-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.wish-number {
+    font-weight: 500;
+}
+
+.wish-status {
+    color: #9ca3af;
+}
+
+.wish-text {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #111827;
+}
+
+.wish-share-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.share-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.share-copy {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.share-copy:hover {
+    background: #e5e7eb;
+}
+
+.share-whatsapp {
+    background: #25d366;
+    color: white;
+}
+
+.share-telegram {
+    background: #0088cc;
+    color: white;
+}
+
+.share-messenger {
+    background: #0084ff;
+    color: white;
+}
+
+.share-sms {
+    background: #007aff;
+    color: white;
+}
+
+.share-email {
+    background: #6b7280;
+    color: white;
+}
+
+/* Copy success message */
+.copy-success {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #059669;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    display: none;
+    z-index: 9999;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.copy-success.show {
+    display: block;
+}
+
+/* Entry and page content */
+.entry-content,
+.page-content {
+    margin: 0;
+    line-height: 1.75;
+}
+
+/* Paragraph spacing inside content */
+.entry-content p,
+.page-content p {
+    margin-bottom: 1.25rem;
+}
+
+.entry-content p:last-child,
+.page-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* Ensure all content respects the container width */
+.entry-content > *,
+.page-content > * {
+    max-width: 100%;
+}
+
+/* Breadcrumb styles */
+.breadcrumb {
+    margin-bottom: 1.5rem;
+}
+
+.breadcrumb-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumb-item:not(:last-child)::after {
+    content: '/';
+    margin: 0 0.5rem;
+    color: #9ca3af;
+}
+
+.breadcrumb-item a {
+    color: #6b7280;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: #111827;
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: #374151;
+    font-weight: 500;
+}
+
+/* Web Vitals Optimizations */
+img, video, iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .site-container {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    /* ADJUST NAVIGATION MARGINS FOR MOBILE */
+    .main-navigation {
+        margin-left: -40px;
+        margin-right: -40px;
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+    
+    .nav-arrow-left {
+        left: 0;
+    }
+    
+    .nav-arrow-right {
+        right: 0;
+    }
+    
+    .entry-title,
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    /* REMOVED MENU PADDING ADJUSTMENTS - KEEP FIRST ITEM ALIGNED */
+    .menu-item:first-child a {
+        padding-left: 0;
+    }
+    
+    /* Breadcrumb mobile adjustments */
+    .breadcrumb-list {
+        font-size: 0.8125rem;
+    }
+    
+    .breadcrumb-item:not(:last-child)::after {
+        margin: 0 0.375rem;
+    }
+    
+    /* Wishes box mobile adjustments */
+    .wishes-box {
+        margin: 1.5rem 0;
+    }
+    
+    .wish-item {
+        padding: 1.25rem;
+    }
+    
+    .wish-share-buttons {
+        gap: 0.375rem;
+    }
+    
+    .share-btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+}
+
+/* Desktop - hide arrows */
+@media (min-width: 769px) {
+    .nav-arrow {
+        display: none !important;
+    }
+    
+    /* REMOVE NAVIGATION MARGINS ON DESKTOP */
+    .main-navigation {
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
