@@ -1662,12 +1662,10 @@ function category_page_meta_box_callback($post) {
                 if (empty($image_type)) {
                     $image_type = 'auto'; // Default to auto if empty
                 }
-                // Debug - remove this after testing
-                echo '<!-- DEBUG: Image type = ' . $image_type . ' -->';
                 ?>
                 
                 <!-- Auto-generated image section -->
-                <div id="category_auto_image_section" <?php if($image_type === 'upload') echo 'style="display: none;"'; ?>>
+                <div id="category_auto_image_section" style="<?php echo ($image_type === 'upload') ? 'display: none;' : ''; ?>">
                     <div id="category_image_preview" style="margin-bottom: 10px;">
                         <canvas id="category_auto_image_canvas" width="300" height="250" style="border: 1px solid #ddd; background: #000;"></canvas>
                     </div>
@@ -1678,7 +1676,7 @@ function category_page_meta_box_callback($post) {
                 </div>
                 
                 <!-- Upload image section -->
-                <div id="category_upload_image_section" <?php if($image_type !== 'upload') echo 'style="display: none;"'; ?>>
+                <div id="category_upload_image_section" style="<?php echo ($image_type !== 'upload') ? 'display: none;' : ''; ?>">
                     <div id="category_uploaded_image_preview" style="margin-bottom: 10px;">
                         <?php 
                         $uploaded_image_id = get_post_meta($post->ID, '_category_uploaded_image', true);
@@ -1763,8 +1761,6 @@ function category_page_meta_box_callback($post) {
         </button>
     </div>
     
-    <script>
-    jQuery(document).ready(function($) {
     <script>
     jQuery(document).ready(function($) {
         // Handle image type selection

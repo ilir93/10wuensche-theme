@@ -12,7 +12,7 @@
     <div class="header-container site-container">
         <div class="site-branding">
             <a href="<?php echo esc_url(home_url('/')); ?>" class="site-logo" id="home-link">
-                🎁 10wuensche.ch
+                <?php echo esc_html(get_theme_emoji()); ?> <?php echo esc_html(get_theme_site_name()); ?>
             </a>
         </div>
         <nav class="main-navigation" role="navigation">
