@@ -101,7 +101,7 @@ get_header(); ?>
                     <?php foreach ($wishes as $index => $wish) : ?>
                         <div class="wish-item" data-wish-index="<?php echo $index; ?>">
                             <div class="wish-header">
-                                <span class="wish-number"><?php echo esc_html(get_theme_translation('wish_number')); ?><?php echo esc_html($wish['number'] ?? '1'); ?></span>
+                                <span class="wish-number"><?php echo esc_html(get_theme_translation('wish_number')); ?><?php echo ($index + 1); ?></span>
                                 <span class="wish-status"><span class="share-count"><?php echo esc_html($wish['share_count'] ?? 0); ?></span> <?php echo esc_html(get_theme_translation('times_shared')); ?></span>
                             </div>
                             <p class="wish-text"><?php echo esc_html($wish['text']); ?></p>
