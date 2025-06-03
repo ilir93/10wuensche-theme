@@ -106,7 +106,7 @@ get_header(); ?>
                             </div>
                             <p class="wish-text"><?php echo esc_html($wish['text']); ?></p>
                             <div class="wish-share-buttons">
-                                <button type="button" class="share-btn share-copy" onclick="var temp = document.createElement('textarea'); temp.value = '<?php echo esc_js($wish['text']); ?>'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); this.innerHTML = '<?php echo esc_js(get_theme_translation('copied_with_check')); ?>'; var btn = this; setTimeout(function() { btn.innerHTML = '<?php echo esc_js(get_theme_translation('copy_with_icon')); ?>'; }, 2000);"><?php echo esc_html(get_theme_translation('copy_with_icon')); ?></button>
+                                <button type="button" class="share-btn share-copy" data-text="<?php echo esc_attr($wish['text']); ?>"><?php echo esc_html(get_theme_translation('copy_with_icon')); ?></button>
                                 <a href="https://wa.me/?text=<?php echo urlencode($wish['text']); ?>" target="_blank" class="share-btn share-whatsapp">WhatsApp</a>
                                 <a href="https://t.me/share/url?text=<?php echo urlencode($wish['text']); ?>" target="_blank" class="share-btn share-telegram">Telegram</a>
                                 <a href="fb-messenger://share?link=<?php echo urlencode(get_permalink()); ?>&app_id=123456789" class="share-btn share-messenger">Messenger</a>
@@ -117,17 +117,44 @@ get_header(); ?>
                     <?php endforeach; ?>
                 </div>
                 
-                <!-- Copy success message -->
-                <div class="copy-success" id="copySuccess"><?php echo esc_html(get_theme_translation('copied')); ?></div>
-                
                 <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     // Handle copy buttons
                     document.querySelectorAll('.share-copy').forEach(function(btn) {
                         btn.addEventListener('click', function() {
                             var text = this.getAttribute('data-text');
-                            navigator.clipboard.writeText(text);
-                            alert('<?php echo esc_js(get_theme_translation('copied')); ?>');
+                            var originalText = this.innerHTML;
+                            var button = this;
+                            
+                            // Copy to clipboard
+                            if (navigator.clipboard) {
+                                navigator.clipboard.writeText(text).then(function() {
+                                    // Change button text to copied
+                                    button.innerHTML = '<?php echo esc_js(get_theme_translation('copied_with_check')); ?>';
+                                    
+                                    // Change back after 2 seconds
+                                    setTimeout(function() {
+                                        button.innerHTML = originalText;
+                                    }, 2000);
+                                });
+                            } else {
+                                // Fallback for older browsers
+                                var temp = document.createElement('textarea');
+                                temp.value = text;
+                                document.body.appendChild(temp);
+                                temp.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(temp);
+                                
+                                // Change button text to copied
+                                button.innerHTML = '<?php echo esc_js(get_theme_translation('copied_with_check')); ?>';
+                                
+                                // Change back after 2 seconds
+                                setTimeout(function() {
+                                    button.innerHTML = originalText;
+                                }, 2000);
+                            }
+                            
                             updateShareCount(this);
                         });
                     });
