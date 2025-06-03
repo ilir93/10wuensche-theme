@@ -10,6 +10,30 @@ get_header(); ?>
     <?php
     while (have_posts()) : the_post();
         
+        // Prepare breadcrumb data for schema
+        $breadcrumb_data = array(
+            array('name' => 'Home', 'url' => home_url('/'))
+        );
+        
+        $ancestors = get_post_ancestors($post->ID);
+        if ($ancestors) {
+            $ancestors = array_reverse($ancestors);
+            foreach ($ancestors as $ancestor) {
+                $breadcrumb_data[] = array(
+                    'name' => get_the_title($ancestor),
+                    'url' => get_permalink($ancestor)
+                );
+            }
+        }
+        $breadcrumb_data[] = array(
+            'name' => get_the_title(),
+            'url' => get_permalink()
+        );
+        
+        // Output schemas
+        echo generate_breadcrumb_schema($breadcrumb_data);
+        echo generate_webpage_schema(get_the_ID(), 'category');
+        
         // Get custom meta values
         $custom_h1_title = get_post_meta(get_the_ID(), '_category_h1_title', true);
         $custom_meta_description = get_post_meta(get_the_ID(), '_category_meta_description', true);
@@ -123,18 +147,42 @@ get_header(); ?>
                 <h2 class="faq-title"><?php echo esc_html($faq_title); ?></h2>
             <?php endif; ?>
             
-            <!-- FAQ Items -->
+            <!-- FAQ Items with Schema Markup -->
             <?php if (!empty($faq_items) && is_array($faq_items)) : ?>
-                <div class="faq-section">
+                <div class="faq-section" itemscope itemtype="https://schema.org/FAQPage">
                     <?php foreach ($faq_items as $faq) : ?>
-                        <div class="faq-item">
-                            <h3 class="faq-question"><?php echo esc_html($faq['question']); ?></h3>
-                            <div class="faq-answer">
-                                <?php echo wp_kses_post(wpautop($faq['answer'])); ?>
+                        <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+                            <h3 class="faq-question" itemprop="name"><?php echo esc_html($faq['question']); ?></h3>
+                            <div class="faq-answer" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+                                <div itemprop="text">
+                                    <?php echo wp_kses_post(wpautop($faq['answer'])); ?>
+                                </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
+                
+                <!-- FAQ Schema JSON-LD -->
+                <script type="application/ld+json">
+                {
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    "mainEntity": [
+                        <?php 
+                        $total_faqs = count($faq_items);
+                        foreach ($faq_items as $index => $faq) : ?>
+                        {
+                            "@type": "Question",
+                            "name": <?php echo json_encode($faq['question']); ?>,
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": <?php echo json_encode($faq['answer']); ?>
+                            }
+                        }<?php echo ($index < $total_faqs - 1) ? ',' : ''; ?>
+                        <?php endforeach; ?>
+                    ]
+                }
+                </script>
             <?php endif; ?>
         </article>
         <?php

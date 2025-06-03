@@ -7,7 +7,43 @@ get_header(); ?>
 <main id="main" class="site-content site-container" role="main">
     <?php
     while (have_posts()) : the_post();
+        
+        // Prepare breadcrumb data for schema
+        $breadcrumb_data = array(
+            array('name' => 'Home', 'url' => home_url('/'))
+        );
+        
+        $ancestors = get_post_ancestors($post->ID);
+        if ($ancestors) {
+            $ancestors = array_reverse($ancestors);
+            foreach ($ancestors as $ancestor) {
+                $breadcrumb_data[] = array(
+                    'name' => get_the_title($ancestor),
+                    'url' => get_permalink($ancestor)
+                );
+            }
+        }
+        $breadcrumb_data[] = array(
+            'name' => get_the_title(),
+            'url' => get_permalink()
+        );
+        
+        // Output breadcrumb schema
+        echo generate_breadcrumb_schema($breadcrumb_data);
+        
+        // Output basic WebPage schema
         ?>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "<?php echo esc_js(get_the_title()); ?>",
+            "url": "<?php echo esc_js(get_permalink()); ?>",
+            "datePublished": "<?php echo get_the_date('c'); ?>",
+            "dateModified": "<?php echo get_the_modified_date('c'); ?>"
+        }
+        </script>
+        
         <article id="page-<?php the_ID(); ?>" <?php post_class(); ?>>
             <!-- Breadcrumb -->
             <nav class="breadcrumb" aria-label="Breadcrumb">

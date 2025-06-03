@@ -10,6 +10,30 @@ get_header(); ?>
     <?php
     while (have_posts()) : the_post();
         
+        // Prepare breadcrumb data for schema
+        $breadcrumb_data = array(
+            array('name' => 'Home', 'url' => home_url('/'))
+        );
+        
+        $ancestors = get_post_ancestors($post->ID);
+        if ($ancestors) {
+            $ancestors = array_reverse($ancestors);
+            foreach ($ancestors as $ancestor) {
+                $breadcrumb_data[] = array(
+                    'name' => get_the_title($ancestor),
+                    'url' => get_permalink($ancestor)
+                );
+            }
+        }
+        $breadcrumb_data[] = array(
+            'name' => get_the_title(),
+            'url' => get_permalink()
+        );
+        
+        // Output schemas
+        echo generate_breadcrumb_schema($breadcrumb_data);
+        echo generate_article_schema(get_the_ID());
+        
         // Get custom meta values
         $custom_h1_title = get_post_meta(get_the_ID(), '_custom_h1_title', true);
         $custom_meta_description = get_post_meta(get_the_ID(), '_custom_meta_description', true);
@@ -77,24 +101,24 @@ get_header(); ?>
                     <?php foreach ($wishes as $index => $wish) : ?>
                         <div class="wish-item" data-wish-index="<?php echo $index; ?>">
                             <div class="wish-header">
-                                <span class="wish-number">Wunsch #<?php echo esc_html($wish['number'] ?? '1'); ?></span>
-                                <span class="wish-status"><span class="share-count"><?php echo esc_html($wish['share_count'] ?? 0); ?></span> mal geteilt</span>
+                                <span class="wish-number"><?php echo esc_html(get_theme_translation('wish_number')); ?><?php echo esc_html($wish['number'] ?? '1'); ?></span>
+                                <span class="wish-status"><span class="share-count"><?php echo esc_html($wish['share_count'] ?? 0); ?></span> <?php echo esc_html(get_theme_translation('times_shared')); ?></span>
                             </div>
                             <p class="wish-text"><?php echo esc_html($wish['text']); ?></p>
                             <div class="wish-share-buttons">
-                                <button type="button" class="share-btn share-copy" onclick="var temp = document.createElement('textarea'); temp.value = '<?php echo esc_js($wish['text']); ?>'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); this.innerHTML = '✅ Kopiert!'; var btn = this; setTimeout(function() { btn.innerHTML = '📋 Kopieren'; }, 2000);">📋 Kopieren</button>
+                                <button type="button" class="share-btn share-copy" onclick="var temp = document.createElement('textarea'); temp.value = '<?php echo esc_js($wish['text']); ?>'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); this.innerHTML = '<?php echo esc_js(get_theme_translation('copied_with_check')); ?>'; var btn = this; setTimeout(function() { btn.innerHTML = '<?php echo esc_js(get_theme_translation('copy_with_icon')); ?>'; }, 2000);"><?php echo esc_html(get_theme_translation('copy_with_icon')); ?></button>
                                 <a href="https://wa.me/?text=<?php echo urlencode($wish['text']); ?>" target="_blank" class="share-btn share-whatsapp">WhatsApp</a>
                                 <a href="https://t.me/share/url?text=<?php echo urlencode($wish['text']); ?>" target="_blank" class="share-btn share-telegram">Telegram</a>
                                 <a href="fb-messenger://share?link=<?php echo urlencode(get_permalink()); ?>&app_id=123456789" class="share-btn share-messenger">Messenger</a>
                                 <a href="sms:?&body=<?php echo urlencode($wish['text']); ?>" class="share-btn share-sms">SMS</a>
-                                <a href="mailto:?subject=Geburtstagswunsch&body=<?php echo urlencode($wish['text']); ?>" class="share-btn share-email">E-Mail</a>
+                                <a href="mailto:?subject=<?php echo urlencode(get_theme_translation('birthday_wish')); ?>&body=<?php echo urlencode($wish['text']); ?>" class="share-btn share-email"><?php echo esc_html(get_theme_translation('email')); ?></a>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
                 
                 <!-- Copy success message -->
-                <div class="copy-success" id="copySuccess">Kopiert!</div>
+                <div class="copy-success" id="copySuccess"><?php echo esc_html(get_theme_translation('copied')); ?></div>
                 
                 <script>
                 document.addEventListener('DOMContentLoaded', function() {
@@ -103,7 +127,7 @@ get_header(); ?>
                         btn.addEventListener('click', function() {
                             var text = this.getAttribute('data-text');
                             navigator.clipboard.writeText(text);
-                            alert('Kopiert!');
+                            alert('<?php echo esc_js(get_theme_translation('copied')); ?>');
                             updateShareCount(this);
                         });
                     });
@@ -169,7 +193,7 @@ get_header(); ?>
             <!-- Internal Links -->
             <?php if (!empty($internal_links) && is_array($internal_links)) : ?>
                 <div class="internal-links-section">
-                    <h3>Weitere Informationen</h3>
+                    <h3><?php echo esc_html(get_theme_translation('more_information')); ?></h3>
                     <div class="internal-links-grid">
                         <?php foreach ($internal_links as $link) : 
                             if (!empty($link['page_id'])) : ?>
@@ -216,7 +240,7 @@ get_header(); ?>
                     
                     <!-- Last Updated Date -->
                     <div class="faq-last-updated">
-                        Letzte Aktualisierung: <?php echo date_i18n('j. F Y', get_post_modified_time('U', false, get_the_ID())); ?>
+                        <?php echo esc_html(get_theme_translation('last_updated')); ?>: <?php echo date_i18n('j. F Y', get_post_modified_time('U', false, get_the_ID())); ?>
                     </div>
                 </div>
                 
@@ -245,7 +269,7 @@ get_header(); ?>
             
             <!-- Share this article -->
             <div class="share-article">
-                <h3>Artikel teilen</h3>
+                <h3><?php echo esc_html(get_theme_translation('share_article')); ?></h3>
                 <div class="share-buttons">
                     <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo urlencode(get_permalink()); ?>" 
                        target="_blank" 
@@ -261,7 +285,7 @@ get_header(); ?>
                     </a>
                     <a href="mailto:?subject=<?php echo rawurlencode(get_the_title()); ?>&body=<?php echo rawurlencode(get_permalink()); ?>" 
                        class="share-button share-email">
-                        E-Mail
+                        <?php echo esc_html(get_theme_translation('email')); ?>
                     </a>
                 </div>
             </div>
@@ -280,7 +304,7 @@ get_header(); ?>
             // Only show author section if we have a name and bio
             if (!empty($author_first_name) && !empty($author_bio)) : ?>
                 <div class="author-info-section">
-                    <h3>Über den Autor</h3>
+                    <h3><?php echo esc_html(get_theme_translation('about_author')); ?></h3>
                     <div class="author-info">
                         <div class="author-name"><?php echo esc_html($author_first_name); ?></div>
                         <div class="author-bio">
