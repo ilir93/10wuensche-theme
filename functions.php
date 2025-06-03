@@ -761,7 +761,6 @@ add_action('wp_head', 'theme_add_tracking_codes', 1);
 require_once get_template_directory() . '/inc/custom-seo-functions.php';
 require_once get_template_directory() . '/inc/category-page-functions.php';
 require_once get_template_directory() . '/inc/homepage-functions.php';
-require_once get_template_directory() . '/inc/social-meta-tags.php';
 
 // ============================================
 // AJAX HANDLERS
