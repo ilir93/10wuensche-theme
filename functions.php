@@ -483,6 +483,7 @@ function theme_current_language_render() {
     <select name="theme_current_language" id="theme_current_language">
         <option value="de" <?php selected($current_lang, 'de'); ?>>Deutsch (DE)</option>
         <option value="en" <?php selected($current_lang, 'en'); ?>>English (EN)</option>
+        <option value="sq" <?php selected($current_lang, 'sq'); ?>>Shqip (Albanian)</option>
     </select>
     <p class="description">Select the active language for your theme</p>
     <?php
@@ -529,6 +530,24 @@ function theme_translations_render() {
         'birthday_wish' => 'Birthday Wish'
     );
     
+    // Albanian translations
+    $albanian_defaults = array(
+        'wish_number' => 'Dëshira #',
+        'times_shared' => 'herë e ndarë',
+        'copy' => 'Kopjo',
+        'copied' => 'U kopjua!',
+        'copy_with_icon' => '📋 Kopjo',
+        'copied_with_check' => '✅ U kopjua!',
+        'share_article' => 'Ndaj Artikullin',
+        'email' => 'E-Mail',
+        'more_information' => 'Më shumë informacion',
+        'about_author' => 'Rreth Autorit',
+        'last_updated' => 'Përditësimi i fundit',
+        'scroll_left' => 'Lëviz majtas',
+        'scroll_right' => 'Lëviz djathtas',
+        'birthday_wish' => 'Urim ditëlindje'
+    );
+    
     // Initialize translations if empty
     if (empty($translations['de'])) {
         $translations['de'] = $default_strings;
@@ -536,13 +555,27 @@ function theme_translations_render() {
     if (empty($translations['en'])) {
         $translations['en'] = $english_defaults;
     }
+    if (empty($translations['sq'])) {
+        $translations['sq'] = $albanian_defaults;
+    }
+    
+    // Get language name
+    $language_names = array(
+        'de' => 'German',
+        'en' => 'English',
+        'sq' => 'Albanian'
+    );
+    $current_language_name = isset($language_names[$current_lang]) ? $language_names[$current_lang] : 'Unknown';
+    
     ?>
     <div id="translation-fields">
-        <p class="description" style="margin-bottom: 15px;">Edit translations for the <strong><?php echo $current_lang === 'en' ? 'English' : 'German'; ?></strong> language:</p>
+        <p class="description" style="margin-bottom: 15px;">Edit translations for the <strong><?php echo $current_language_name; ?></strong> language:</p>
         
         <table class="form-table" style="background: #f5f5f5; padding: 10px; border-radius: 5px;">
             <?php foreach ($default_strings as $key => $default_value) : 
-                $value = isset($translations[$current_lang][$key]) ? $translations[$current_lang][$key] : ($current_lang === 'en' ? $english_defaults[$key] : $default_value);
+                $value = isset($translations[$current_lang][$key]) ? $translations[$current_lang][$key] : 
+                         ($current_lang === 'en' ? $english_defaults[$key] : 
+                         ($current_lang === 'sq' ? $albanian_defaults[$key] : $default_value));
                 ?>
                 <tr>
                     <th scope="row" style="width: 200px;">
@@ -564,12 +597,15 @@ function theme_translations_render() {
         
         <?php 
         // Store other language translations as hidden fields
-        $other_lang = $current_lang === 'en' ? 'de' : 'en';
-        foreach ($translations[$other_lang] as $key => $value) : ?>
-            <input type="hidden" 
-                   name="theme_translations[<?php echo esc_attr($other_lang); ?>][<?php echo esc_attr($key); ?>]" 
-                   value="<?php echo esc_attr($value); ?>">
-        <?php endforeach; ?>
+        foreach ($translations as $lang => $lang_translations) : 
+            if ($lang !== $current_lang) :
+                foreach ($lang_translations as $key => $value) : ?>
+                    <input type="hidden" 
+                           name="theme_translations[<?php echo esc_attr($lang); ?>][<?php echo esc_attr($key); ?>]" 
+                           value="<?php echo esc_attr($value); ?>">
+                <?php endforeach;
+            endif;
+        endforeach; ?>
     </div>
     
     <script>
