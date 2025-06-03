@@ -692,49 +692,65 @@ function custom_seo_save_meta_box_data($post_id) {
             update_post_meta($post_id, '_custom_image', absint($_POST['custom_image']));
         }
     } else {
-        // Save auto-generated image
-        if (isset($_POST['custom_image_data']) && !empty($_POST['custom_image_data'])) {
-            // Get H1 title for filename
-            $h1_title = get_post_meta($post_id, '_custom_h1_title', true) ?: get_the_title($post_id);
-            $filename = sanitize_file_name($h1_title) . '-custom.png';
-            
-            // Process base64 image
-            $image_data = $_POST['custom_image_data'];
-            $image_data = str_replace('data:image/png;base64,', '', $image_data);
-            $image_data = str_replace(' ', '+', $image_data);
-            $decoded_image = base64_decode($image_data);
-            
-            // Upload to media library
-            $upload_dir = wp_upload_dir();
-            $upload_path = $upload_dir['path'] . '/' . $filename;
-            $upload_url = $upload_dir['url'] . '/' . $filename;
-            
-            file_put_contents($upload_path, $decoded_image);
-            
-            // Check if image already exists
-            $existing_image = get_page_by_title($h1_title . '-custom', OBJECT, 'attachment');
-            
-            if (!$existing_image) {
-                // Create attachment
-                $attachment = array(
-                    'post_mime_type' => 'image/png',
-                    'post_title' => $h1_title . '-custom',
-                    'post_content' => '',
-                    'post_status' => 'inherit'
-                );
+        // Save auto-generated image only if H1 has changed
+        $old_h1_title = get_post_meta($post_id, '_custom_h1_title_previous', true);
+        $new_h1_title = get_post_meta($post_id, '_custom_h1_title', true) ?: get_the_title($post_id);
+        
+        if ($old_h1_title !== $new_h1_title) {
+            // H1 has changed, generate new image
+            if (isset($_POST['custom_image_data']) && !empty($_POST['custom_image_data'])) {
+                // Get H1 title for filename
+                $filename = sanitize_file_name($new_h1_title) . '-custom.png';
                 
-                $attach_id = wp_insert_attachment($attachment, $upload_path, $post_id);
+                // Process base64 image
+                $image_data = $_POST['custom_image_data'];
+                $image_data = str_replace('data:image/png;base64,', '', $image_data);
+                $image_data = str_replace(' ', '+', $image_data);
+                $decoded_image = base64_decode($image_data);
                 
-                // Generate metadata
-                require_once(ABSPATH . 'wp-admin/includes/image.php');
-                $attach_data = wp_generate_attachment_metadata($attach_id, $upload_path);
-                wp_update_attachment_metadata($attach_id, $attach_data);
+                // Upload to media library
+                $upload_dir = wp_upload_dir();
+                $upload_path = $upload_dir['path'] . '/' . $filename;
+                $upload_url = $upload_dir['url'] . '/' . $filename;
                 
-                update_post_meta($post_id, '_custom_image', $attach_id);
-            } else {
-                update_post_meta($post_id, '_custom_image', $existing_image->ID);
+                file_put_contents($upload_path, $decoded_image);
+                
+                // Check if image with exact same title already exists
+                global $wpdb;
+                $existing_image_id = $wpdb->get_var($wpdb->prepare(
+                    "SELECT ID FROM $wpdb->posts WHERE post_title = %s AND post_type = 'attachment' AND post_mime_type = 'image/png' LIMIT 1",
+                    $new_h1_title . '-custom'
+                ));
+                
+                if (!$existing_image_id) {
+                    // Create attachment
+                    $attachment = array(
+                        'post_mime_type' => 'image/png',
+                        'post_title' => $new_h1_title . '-custom',
+                        'post_content' => '',
+                        'post_status' => 'inherit'
+                    );
+                    
+                    $attach_id = wp_insert_attachment($attachment, $upload_path, $post_id);
+                    
+                    // Generate metadata
+                    require_once(ABSPATH . 'wp-admin/includes/image.php');
+                    $attach_data = wp_generate_attachment_metadata($attach_id, $upload_path);
+                    wp_update_attachment_metadata($attach_id, $attach_data);
+                    
+                    update_post_meta($post_id, '_custom_image', $attach_id);
+                } else {
+                    // Use existing image
+                    update_post_meta($post_id, '_custom_image', $existing_image_id);
+                    // Delete the duplicate file we just created
+                    @unlink($upload_path);
+                }
             }
+            
+            // Update the previous H1 title for next comparison
+            update_post_meta($post_id, '_custom_h1_title_previous', $new_h1_title);
         }
+        // If H1 hasn't changed, keep the existing image (don't update _custom_image meta)
     }
     
     // Save Image Alt Text
