@@ -666,3 +666,305 @@ function custom_seo_admin_script() {
     }
 }
 add_action('admin_footer', 'custom_seo_admin_script');
+
+// ============================================
+// YOAST SEO INTEGRATION
+// ============================================
+
+/**
+ * Filter Yoast SEO content analysis to include our custom fields
+ */
+function custom_seo_filter_yoast_content($content, $post) {
+    if (!$post || $post->post_type !== 'page') {
+        return $content;
+    }
+    
+    $template = get_post_meta($post->ID, '_wp_page_template', true);
+    if ($template !== 'page-custom-seo.php') {
+        return $content;
+    }
+    
+    // Get all our custom fields
+    $custom_h1_title = get_post_meta($post->ID, '_custom_h1_title', true);
+    $custom_meta_description = get_post_meta($post->ID, '_custom_meta_description', true);
+    $custom_subtitle_h2 = get_post_meta($post->ID, '_custom_subtitle_h2', true);
+    $custom_content_1 = get_post_meta($post->ID, '_custom_content_1', true);
+    $custom_subtitle_h3 = get_post_meta($post->ID, '_custom_subtitle_h3', true);
+    $custom_content_2 = get_post_meta($post->ID, '_custom_content_2', true);
+    $faq_title = get_post_meta($post->ID, '_faq_title', true);
+    $faq_items = get_post_meta($post->ID, '_faq_items', true);
+    $wishes = get_post_meta($post->ID, '_custom_wishes', true);
+    $internal_links = get_post_meta($post->ID, '_internal_links', true);
+    
+    // Build content for Yoast analysis
+    $yoast_content = '';
+    
+    // Add H1 (introduction)
+    if (!empty($custom_h1_title)) {
+        $yoast_content .= '<h1>' . $custom_h1_title . '</h1>\n\n';
+    }
+    
+    // Add meta description as intro paragraph
+    if (!empty($custom_meta_description)) {
+        $yoast_content .= '<p>' . $custom_meta_description . '</p>\n\n';
+    }
+    
+    // Add wishes text
+    if (!empty($wishes) && is_array($wishes)) {
+        foreach ($wishes as $wish) {
+            if (!empty($wish['text'])) {
+                $yoast_content .= '<p>' . $wish['text'] . '</p>\n';
+            }
+        }
+        $yoast_content .= '\n';
+    }
+    
+    // Add H2 and content 1
+    if (!empty($custom_subtitle_h2)) {
+        $yoast_content .= '<h2>' . $custom_subtitle_h2 . '</h2>\n\n';
+    }
+    if (!empty($custom_content_1)) {
+        $yoast_content .= $custom_content_1 . '\n\n';
+    }
+    
+    // Add internal links
+    if (!empty($internal_links) && is_array($internal_links)) {
+        $yoast_content .= '<h3>Weitere Informationen</h3>\n';
+        foreach ($internal_links as $link) {
+            if (!empty($link['page_id']) && !empty($link['text'])) {
+                $url = get_permalink($link['page_id']);
+                $yoast_content .= '<a href="' . esc_url($url) . '">' . esc_html($link['text']) . '</a>\n';
+            }
+        }
+        $yoast_content .= '\n';
+    }
+    
+    // Add H3 and content 2
+    if (!empty($custom_subtitle_h3)) {
+        $yoast_content .= '<h3>' . $custom_subtitle_h3 . '</h3>\n\n';
+    }
+    if (!empty($custom_content_2)) {
+        $yoast_content .= $custom_content_2 . '\n\n';
+    }
+    
+    // Add FAQ content
+    if (!empty($faq_title)) {
+        $yoast_content .= '<h2>' . $faq_title . '</h2>\n\n';
+    }
+    if (!empty($faq_items) && is_array($faq_items)) {
+        foreach ($faq_items as $faq) {
+            if (!empty($faq['question'])) {
+                $yoast_content .= '<h3>' . $faq['question'] . '</h3>\n';
+            }
+            if (!empty($faq['answer'])) {
+                $yoast_content .= '<p>' . $faq['answer'] . '</p>\n\n';
+            }
+        }
+    }
+    
+    return $yoast_content;
+}
+add_filter('wpseo_pre_analysis_post_content', 'custom_seo_filter_yoast_content', 10, 2);
+
+/**
+ * Filter Yoast SEO meta description
+ */
+function custom_seo_filter_yoast_metadesc($meta_desc, $presentation) {
+    if (!is_singular('page')) {
+        return $meta_desc;
+    }
+    
+    $post_id = get_queried_object_id();
+    $template = get_post_meta($post_id, '_wp_page_template', true);
+    
+    if ($template === 'page-custom-seo.php') {
+        $custom_meta_desc = get_post_meta($post_id, '_custom_meta_description', true);
+        if (!empty($custom_meta_desc)) {
+            return $custom_meta_desc;
+        }
+    }
+    
+    return $meta_desc;
+}
+add_filter('wpseo_metadesc', 'custom_seo_filter_yoast_metadesc', 10, 2);
+add_filter('wpseo_opengraph_desc', 'custom_seo_filter_yoast_metadesc', 10, 2);
+
+/**
+ * Add custom image for Yoast SEO analysis
+ */
+function custom_seo_add_yoast_images($images, $post_id) {
+    $template = get_post_meta($post_id, '_wp_page_template', true);
+    
+    if ($template === 'page-custom-seo.php') {
+        $custom_image_id = get_post_meta($post_id, '_custom_image', true);
+        if ($custom_image_id) {
+            $image_url = wp_get_attachment_url($custom_image_id);
+            $image_alt = get_post_meta($post_id, '_custom_image_alt', true);
+            
+            if ($image_url) {
+                // Add image with alt text for Yoast to recognize
+                $images[] = array(
+                    'url' => $image_url,
+                    'alt' => $image_alt
+                );
+            }
+        }
+    }
+    
+    return $images;
+}
+add_filter('wpseo_sitemap_urlimages', 'custom_seo_add_yoast_images', 10, 2);
+
+/**
+ * Make Yoast SEO recognize our custom fields in JavaScript
+ */
+function custom_seo_yoast_js_analysis() {
+    if (!is_admin()) {
+        return;
+    }
+    
+    global $post;
+    if (!$post || $post->post_type !== 'page') {
+        return;
+    }
+    
+    $template = get_post_meta($post->ID, '_wp_page_template', true);
+    if ($template !== 'page-custom-seo.php') {
+        return;
+    }
+    ?>
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        // Wait for YoastSEO to be available
+        if (typeof YoastSEO !== 'undefined' && typeof YoastSEO.app !== 'undefined') {
+            
+            // Custom content modification for Yoast analysis
+            YoastSEO.app.registerPlugin('customSEOPlugin', {status: 'ready'});
+            
+            YoastSEO.app.registerModification('content', function(content) {
+                var customContent = '';
+                
+                // Get H1 title
+                var h1Title = $('#custom_h1_title').val();
+                if (h1Title) {
+                    customContent += '<h1>' + h1Title + '</h1>\n\n';
+                }
+                
+                // Get meta description
+                var metaDesc = $('#custom_meta_description').val();
+                if (metaDesc) {
+                    customContent += '<p>' + metaDesc + '</p>\n\n';
+                }
+                
+                // Get wishes
+                $('.wish-backend-item').each(function() {
+                    var wishText = $(this).find('input[name*="[text]"]').val();
+                    if (wishText) {
+                        customContent += '<p>' + wishText + '</p>\n';
+                    }
+                });
+                
+                // Get H2
+                var h2 = $('#custom_subtitle_h2').val();
+                if (h2) {
+                    customContent += '\n<h2>' + h2 + '</h2>\n\n';
+                }
+                
+                // Get content 1 from TinyMCE
+                if (typeof tinyMCE !== 'undefined' && tinyMCE.get('custom_content_1')) {
+                    var content1 = tinyMCE.get('custom_content_1').getContent();
+                    if (content1) {
+                        customContent += content1 + '\n\n';
+                    }
+                }
+                
+                // Get internal links
+                var hasInternalLinks = false;
+                $('.internal-link-item').each(function() {
+                    var linkText = $(this).find('input[name*="[text]"]').val();
+                    var pageId = $(this).find('select[name*="[page_id]"]').val();
+                    if (linkText && pageId) {
+                        if (!hasInternalLinks) {
+                            customContent += '<h3>Weitere Informationen</h3>\n';
+                            hasInternalLinks = true;
+                        }
+                        customContent += '<a href="#">' + linkText + '</a>\n';
+                    }
+                });
+                
+                // Get H3
+                var h3 = $('#custom_subtitle_h3').val();
+                if (h3) {
+                    customContent += '\n<h3>' + h3 + '</h3>\n\n';
+                }
+                
+                // Get content 2 from TinyMCE
+                if (typeof tinyMCE !== 'undefined' && tinyMCE.get('custom_content_2')) {
+                    var content2 = tinyMCE.get('custom_content_2').getContent();
+                    if (content2) {
+                        customContent += content2 + '\n\n';
+                    }
+                }
+                
+                // Get FAQ title
+                var faqTitle = $('#faq_title').val();
+                if (faqTitle) {
+                    customContent += '<h2>' + faqTitle + '</h2>\n\n';
+                }
+                
+                // Get FAQ items
+                $('.faq-item').each(function() {
+                    var question = $(this).find('input[name*="[question]"]').val();
+                    var answer = $(this).find('textarea[name*="[answer]"]').val();
+                    if (question) {
+                        customContent += '<h3>' + question + '</h3>\n';
+                    }
+                    if (answer) {
+                        customContent += '<p>' + answer + '</p>\n\n';
+                    }
+                });
+                
+                // Check for image
+                var imageId = $('#custom_image').val();
+                var imageAlt = $('#custom_image_alt').val();
+                if (imageId && imageAlt) {
+                    customContent += '<img alt="' + imageAlt + '" />\n';
+                }
+                
+                return customContent;
+            }, 'customSEOPlugin', 5);
+            
+            // Trigger reanalysis when fields change
+            $('#custom_h1_title, #custom_meta_description, #custom_subtitle_h2, #custom_subtitle_h3, #faq_title, #custom_image_alt').on('input change', function() {
+                YoastSEO.app.refresh();
+            });
+            
+            // Trigger reanalysis when wishes change
+            $(document).on('input change', '.wish-backend-item input', function() {
+                YoastSEO.app.refresh();
+            });
+            
+            // Trigger reanalysis when internal links change
+            $(document).on('input change', '.internal-link-item input, .internal-link-item select', function() {
+                YoastSEO.app.refresh();
+            });
+            
+            // Trigger reanalysis when FAQ changes
+            $(document).on('input change', '.faq-item input, .faq-item textarea', function() {
+                YoastSEO.app.refresh();
+            });
+            
+            // Trigger reanalysis when TinyMCE content changes
+            if (typeof tinyMCE !== 'undefined') {
+                tinyMCE.on('AddEditor', function(e) {
+                    e.editor.on('change keyup', function() {
+                        YoastSEO.app.refresh();
+                    });
+                });
+            }
+        }
+    });
+    </script>
+    <?php
+}
+add_action('admin_footer', 'custom_seo_yoast_js_analysis');
