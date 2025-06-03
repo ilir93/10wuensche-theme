@@ -191,35 +191,62 @@ function custom_seo_meta_box_callback($post) {
         <label style="display: block; font-weight: bold; margin-bottom: 5px;">
             6. Image 300x250
         </label>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="radio" name="custom_image_type" value="auto" <?php echo (!$custom_image || get_post_meta($post->ID, '_custom_image_type', true) == 'auto') ? 'checked' : ''; ?>>
+                <strong>Auto-generate from H1 title</strong>
+            </label>
+            <label style="display: block;">
+                <input type="radio" name="custom_image_type" value="upload" <?php echo ($custom_image && get_post_meta($post->ID, '_custom_image_type', true) == 'upload') ? 'checked' : ''; ?>>
+                <strong>Upload custom image</strong>
+            </label>
+        </div>
         <div style="display: flex; gap: 15px; align-items: flex-start;">
             <div style="flex: 1;">
-                <div id="custom_image_preview" style="margin-bottom: 10px;">
-                    <?php if ($custom_image) : 
-                        echo wp_get_attachment_image($custom_image, array(300, 250));
-                    else : ?>
-                        <div style="width: 300px; height: 250px; border: 2px dashed #ddd; display: flex; align-items: center; justify-content: center; color: #999;">
-                            No image selected
-                        </div>
-                    <?php endif; ?>
+                <!-- Auto-generated image section -->
+                <div id="custom_auto_image_section" style="<?php echo ($custom_image && get_post_meta($post->ID, '_custom_image_type', true) == 'upload') ? 'display: none;' : ''; ?>">
+                    <div id="custom_auto_image_preview" style="margin-bottom: 10px;">
+                        <canvas id="custom_auto_image_canvas" width="300" height="250" style="border: 1px solid #ddd; background: #000;"></canvas>
+                    </div>
+                    <button type="button" id="generate_custom_image_button" class="button button-primary" style="margin-bottom: 10px;">
+                        Generate Image from H1
+                    </button>
+                    <input type="hidden" id="custom_image_data" name="custom_image_data" value="">
                 </div>
-                <button type="button" id="custom_image_button" class="button button-primary">
-                    Select Image
-                </button>
-                <button type="button" id="remove_custom_image" class="button" style="<?php echo $custom_image ? '' : 'display: none;'; ?>">
-                    Remove Image
-                </button>
-                <input type="hidden" id="custom_image" name="custom_image" value="<?php echo esc_attr($custom_image); ?>">
+                
+                <!-- Upload image section -->
+                <div id="custom_upload_image_section" style="<?php echo (!$custom_image || get_post_meta($post->ID, '_custom_image_type', true) != 'upload') ? 'display: none;' : ''; ?>">
+                    <div id="custom_image_preview" style="margin-bottom: 10px;">
+                        <?php if ($custom_image) : 
+                            echo wp_get_attachment_image($custom_image, array(300, 250));
+                        else : ?>
+                            <div style="width: 300px; height: 250px; border: 2px dashed #ddd; display: flex; align-items: center; justify-content: center; color: #999;">
+                                No image selected
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <button type="button" id="custom_image_button" class="button button-primary">
+                        Select Image
+                    </button>
+                    <button type="button" id="remove_custom_image" class="button" style="<?php echo $custom_image ? '' : 'display: none;'; ?>">
+                        Remove Image
+                    </button>
+                    <input type="hidden" id="custom_image" name="custom_image" value="<?php echo esc_attr($custom_image); ?>">
+                </div>
             </div>
             <div style="flex: 1;">
-                <label for="custom_image_alt" style="display: block; margin-bottom: 5px;">Alt Text:</label>
+                <label for="custom_image_alt" style="display: block; margin-bottom: 5px;">Alt Text (auto-filled from H1):</label>
                 <input type="text" 
                        id="custom_image_alt" 
                        name="custom_image_alt" 
-                       value="<?php echo esc_attr($custom_image_alt); ?>" 
+                       value="<?php echo esc_attr($custom_image_alt ?: $custom_h1_title); ?>" 
                        style="width: 100%; padding: 8px; font-size: 14px;"
-                       placeholder="Enter image alt text for SEO">
+                       placeholder="Auto-filled from H1 title">
             </div>
         </div>
+        <p style="color: #666; font-size: 12px; margin-top: 5px;">
+            Choose to auto-generate a 300x250 image with black background and H1 text, or upload your own custom image.
+        </p>
     </div>
     
     <div style="margin-bottom: 20px;">
@@ -361,6 +388,89 @@ function custom_seo_meta_box_callback($post) {
         
         updateCharCount();
         metaDescField.on('input', updateCharCount);
+        
+        // Handle image type selection
+        $('input[name="custom_image_type"]').on('change', function() {
+            if ($(this).val() === 'auto') {
+                $('#custom_auto_image_section').show();
+                $('#custom_upload_image_section').hide();
+                generateCustomImage(); // Auto-generate when switching to auto
+            } else {
+                $('#custom_auto_image_section').hide();
+                $('#custom_upload_image_section').show();
+            }
+        });
+        
+        // Auto-generate image function
+        function generateCustomImage() {
+            var h1Text = $('#custom_h1_title').val() || $('#title').val();
+            var canvas = document.getElementById('custom_auto_image_canvas');
+            if (!canvas) return; // Exit if canvas doesn't exist
+            
+            var ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 300, 250);
+            
+            // Set text properties
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Word wrap function
+            function wrapText(text, maxWidth) {
+                var words = text.split(' ');
+                var lines = [];
+                var currentLine = '';
+                
+                ctx.font = '24px Arial';
+                
+                for (var i = 0; i < words.length; i++) {
+                    var testLine = currentLine + words[i] + ' ';
+                    var metrics = ctx.measureText(testLine);
+                    var testWidth = metrics.width;
+                    
+                    if (testWidth > maxWidth && i > 0) {
+                        lines.push(currentLine.trim());
+                        currentLine = words[i] + ' ';
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+                lines.push(currentLine.trim());
+                return lines;
+            }
+            
+            if (h1Text) {
+                var lines = wrapText(h1Text, 260);
+                var lineHeight = 30;
+                var totalHeight = lines.length * lineHeight;
+                var startY = (250 - totalHeight) / 2 + lineHeight / 2;
+                
+                ctx.font = '24px Arial';
+                for (var i = 0; i < lines.length; i++) {
+                    ctx.fillText(lines[i], 150, startY + (i * lineHeight));
+                }
+                
+                // Save canvas data
+                $('#custom_image_data').val(canvas.toDataURL('image/png'));
+                
+                // Auto-fill alt text
+                $('#custom_image_alt').val(h1Text);
+            }
+        }
+        
+        // Generate on button click
+        $('#generate_custom_image_button').on('click', generateCustomImage);
+        
+        // Auto-generate when H1 changes
+        $('#custom_h1_title').on('input', generateCustomImage);
+        
+        // Generate on load only if auto mode is selected
+        if ($('input[name="custom_image_type"]:checked').val() !== 'upload') {
+            generateCustomImage();
+        }
         
         // Wishes functionality
         var wishesContainer = $('#wishes_container');
@@ -568,9 +678,63 @@ function custom_seo_save_meta_box_data($post_id) {
         update_post_meta($post_id, '_custom_content_1', wp_kses_post($_POST['custom_content_1']));
     }
     
-    // Save Image
-    if (isset($_POST['custom_image'])) {
-        update_post_meta($post_id, '_custom_image', absint($_POST['custom_image']));
+    // Save Image Type
+    if (isset($_POST['custom_image_type'])) {
+        update_post_meta($post_id, '_custom_image_type', sanitize_text_field($_POST['custom_image_type']));
+    } else {
+        update_post_meta($post_id, '_custom_image_type', 'auto');
+    }
+    
+    // Save Image and Alt Text
+    if (isset($_POST['custom_image_type']) && $_POST['custom_image_type'] == 'upload') {
+        // Save uploaded image
+        if (isset($_POST['custom_image']) && !empty($_POST['custom_image'])) {
+            update_post_meta($post_id, '_custom_image', absint($_POST['custom_image']));
+        }
+    } else {
+        // Save auto-generated image
+        if (isset($_POST['custom_image_data']) && !empty($_POST['custom_image_data'])) {
+            // Get H1 title for filename
+            $h1_title = get_post_meta($post_id, '_custom_h1_title', true) ?: get_the_title($post_id);
+            $filename = sanitize_file_name($h1_title) . '-custom.png';
+            
+            // Process base64 image
+            $image_data = $_POST['custom_image_data'];
+            $image_data = str_replace('data:image/png;base64,', '', $image_data);
+            $image_data = str_replace(' ', '+', $image_data);
+            $decoded_image = base64_decode($image_data);
+            
+            // Upload to media library
+            $upload_dir = wp_upload_dir();
+            $upload_path = $upload_dir['path'] . '/' . $filename;
+            $upload_url = $upload_dir['url'] . '/' . $filename;
+            
+            file_put_contents($upload_path, $decoded_image);
+            
+            // Check if image already exists
+            $existing_image = get_page_by_title($h1_title . '-custom', OBJECT, 'attachment');
+            
+            if (!$existing_image) {
+                // Create attachment
+                $attachment = array(
+                    'post_mime_type' => 'image/png',
+                    'post_title' => $h1_title . '-custom',
+                    'post_content' => '',
+                    'post_status' => 'inherit'
+                );
+                
+                $attach_id = wp_insert_attachment($attachment, $upload_path, $post_id);
+                
+                // Generate metadata
+                require_once(ABSPATH . 'wp-admin/includes/image.php');
+                $attach_data = wp_generate_attachment_metadata($attach_id, $upload_path);
+                wp_update_attachment_metadata($attach_id, $attach_data);
+                
+                update_post_meta($post_id, '_custom_image', $attach_id);
+            } else {
+                update_post_meta($post_id, '_custom_image', $existing_image->ID);
+            }
+        }
     }
     
     // Save Image Alt Text
@@ -685,7 +849,7 @@ function custom_seo_filter_yoast_content($content, $post) {
     }
     
     // Get all our custom fields
-    $custom_h1_title = get_post_meta($post->ID, '_custom_h1_title', true);
+    $custom_h1_title = get_post_meta($post->ID, '_custom_h1_title', true) ?: get_the_title($post->ID);
     $custom_meta_description = get_post_meta($post->ID, '_custom_meta_description', true);
     $custom_subtitle_h2 = get_post_meta($post->ID, '_custom_subtitle_h2', true);
     $custom_content_1 = get_post_meta($post->ID, '_custom_content_1', true);
@@ -695,6 +859,8 @@ function custom_seo_filter_yoast_content($content, $post) {
     $faq_items = get_post_meta($post->ID, '_faq_items', true);
     $wishes = get_post_meta($post->ID, '_custom_wishes', true);
     $internal_links = get_post_meta($post->ID, '_internal_links', true);
+    $custom_image_id = get_post_meta($post->ID, '_custom_image', true);
+    $custom_image_alt = get_post_meta($post->ID, '_custom_image_alt', true);
     
     // Build content for Yoast analysis
     $yoast_content = '';
@@ -727,13 +893,23 @@ function custom_seo_filter_yoast_content($content, $post) {
         $yoast_content .= $custom_content_1 . '\n\n';
     }
     
+    // Add image
+    if (!empty($custom_image_id) && !empty($custom_image_alt)) {
+        $image_url = wp_get_attachment_url($custom_image_id);
+        if ($image_url) {
+            $yoast_content .= '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($custom_image_alt) . '" />\n\n';
+        }
+    }
+    
     // Add internal links
     if (!empty($internal_links) && is_array($internal_links)) {
-        $yoast_content .= '<h3>Weitere Informationen</h3>\n';
+        $yoast_content .= '<h3>' . get_theme_translation('more_information') . '</h3>\n';
         foreach ($internal_links as $link) {
             if (!empty($link['page_id']) && !empty($link['text'])) {
                 $url = get_permalink($link['page_id']);
-                $yoast_content .= '<a href="' . esc_url($url) . '">' . esc_html($link['text']) . '</a>\n';
+                if ($url) {
+                    $yoast_content .= '<p><a href="' . esc_url($url) . '">' . esc_html($link['text']) . '</a></p>\n';
+                }
             }
         }
         $yoast_content .= '\n';
@@ -845,7 +1021,7 @@ function custom_seo_yoast_js_analysis() {
                 var customContent = '';
                 
                 // Get H1 title
-                var h1Title = $('#custom_h1_title').val();
+                var h1Title = $('#custom_h1_title').val() || $('#title').val();
                 if (h1Title) {
                     customContent += '<h1>' + h1Title + '</h1>\n\n';
                 }
@@ -888,9 +1064,24 @@ function custom_seo_yoast_js_analysis() {
                             customContent += '<h3>Weitere Informationen</h3>\n';
                             hasInternalLinks = true;
                         }
-                        customContent += '<a href="#">' + linkText + '</a>\n';
+                        customContent += '<p><a href="#link' + pageId + '">' + linkText + '</a></p>\n';
                     }
                 });
+                if (hasInternalLinks) {
+                    customContent += '\n';
+                }
+                
+                // Check for image after content 1
+                var imageId = $('#custom_image').val();
+                var imageAlt = $('#custom_image_alt').val();
+                if (imageId) {
+                    var imageSrc = $('#custom_image_preview img').attr('src');
+                    if (imageSrc) {
+                        customContent += '<img src="' + imageSrc + '" alt="' + (imageAlt || '') + '" />\n\n';
+                    } else if (imageAlt) {
+                        customContent += '<img alt="' + imageAlt + '" />\n\n';
+                    }
+                }
                 
                 // Get H3
                 var h3 = $('#custom_subtitle_h3').val();
@@ -923,13 +1114,6 @@ function custom_seo_yoast_js_analysis() {
                         customContent += '<p>' + answer + '</p>\n\n';
                     }
                 });
-                
-                // Check for image
-                var imageId = $('#custom_image').val();
-                var imageAlt = $('#custom_image_alt').val();
-                if (imageId && imageAlt) {
-                    customContent += '<img alt="' + imageAlt + '" />\n';
-                }
                 
                 return customContent;
             }, 'customSEOPlugin', 5);
