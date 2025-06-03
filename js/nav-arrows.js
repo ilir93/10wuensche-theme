@@ -24,25 +24,49 @@ document.addEventListener('DOMContentLoaded', function() {
     sessionStorage.removeItem('menuScrollPos');
     sessionStorage.removeItem('cameFromHome');
     
-    // Update buttons WITHOUT animations
+    // Check if content overflows (like YouTube)
+    function checkOverflow() {
+        const scrollWidth = container.scrollWidth;
+        const clientWidth = container.clientWidth;
+        const hasOverflow = scrollWidth > clientWidth;
+        
+        // Add class to container for CSS styling
+        if (hasOverflow) {
+            container.classList.add('has-overflow');
+        } else {
+            container.classList.remove('has-overflow');
+        }
+        
+        return hasOverflow;
+    }
+    
+    // Update buttons based on scroll position and overflow
     function updateButtons() {
+        const hasOverflow = checkOverflow();
         const scrollLeft = container.scrollLeft;
         const scrollWidth = container.scrollWidth;
         const clientWidth = container.clientWidth;
         const maxScroll = scrollWidth - clientWidth;
         
-        // Only show arrows on mobile
-        const isMobile = window.innerWidth <= 768;
-        
-        if (!isMobile || maxScroll <= 0) {
-            leftBtn.style.visibility = 'hidden';
-            rightBtn.style.visibility = 'hidden';
+        // Only show arrows if there's overflow (like YouTube)
+        if (!hasOverflow) {
+            leftBtn.classList.remove('show');
+            rightBtn.classList.remove('show');
             return;
         }
         
-        // Use visibility instead of display to prevent layout shift
-        leftBtn.style.visibility = scrollLeft > 10 ? 'visible' : 'hidden';
-        rightBtn.style.visibility = scrollLeft < maxScroll - 10 ? 'visible' : 'hidden';
+        // Show/hide arrows based on scroll position
+        if (scrollLeft > 10) {
+            leftBtn.classList.add('show');
+        } else {
+            leftBtn.classList.remove('show');
+        }
+        
+        if (scrollLeft < maxScroll - 10) {
+            rightBtn.classList.add('show');
+        } else {
+            rightBtn.classList.remove('show');
+        }
     }
     
     // Save position when clicking menu links
@@ -84,8 +108,17 @@ document.addEventListener('DOMContentLoaded', function() {
     container.addEventListener('scroll', updateButtons, { passive: true });
     
     // Update on resize
-    window.addEventListener('resize', updateButtons, { passive: true });
+    window.addEventListener('resize', function() {
+        updateButtons();
+    }, { passive: true });
     
     // Initial update
     updateButtons();
+    
+    // Check overflow on font load (in case custom fonts affect width)
+    if ('fonts' in document) {
+        document.fonts.ready.then(function() {
+            updateButtons();
+        });
+    }
 });
