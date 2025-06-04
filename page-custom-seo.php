@@ -110,7 +110,7 @@ get_header(); ?>
                                 <a href="https://wa.me/?text=<?php echo urlencode($wish['text']); ?>" target="_blank" class="share-btn share-whatsapp">WhatsApp</a>
                                 <a href="https://t.me/share/url?text=<?php echo urlencode($wish['text']); ?>" target="_blank" class="share-btn share-telegram">Telegram</a>
                                 <a href="fb-messenger://share?link=<?php echo urlencode(get_permalink()); ?>&app_id=123456789" class="share-btn share-messenger">Messenger</a>
-                                <a href="sms:?&body=<?php echo urlencode($wish['text']); ?>" class="share-btn share-sms">SMS</a>
+                                <a href="sms:?&body=<?php echo rawurlencode($wish['text']); ?>" class="share-btn share-sms">SMS</a>
                                 <a href="mailto:?subject=<?php echo urlencode(get_theme_translation('birthday_wish')); ?>&body=<?php echo urlencode($wish['text']); ?>" class="share-btn share-email"><?php echo esc_html(get_theme_translation('email')); ?></a>
                             </div>
                         </div>
