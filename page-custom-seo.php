@@ -159,8 +159,8 @@ get_header(); ?>
                         });
                     });
                     
-                    // Update share count for all share buttons
-                    document.querySelectorAll('.share-btn').forEach(function(btn) {
+                    // Update share count for all share buttons except copy buttons
+                    document.querySelectorAll('.share-btn:not(.share-copy)').forEach(function(btn) {
                         btn.addEventListener('click', function() {
                             updateShareCount(this);
                         });
