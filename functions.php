@@ -252,7 +252,8 @@ function get_theme_translation($key, $default = '') {
         'scroll_right' => 'Scroll right',
         
         // Wish email subject
-        'birthday_wish' => 'Geburtstagswunsch'
+        'birthday_wish' => 'Geburtstagswunsch',
+        'made_with_love' => 'Erstellt mit ❤️ in 🇨🇭 Zürich'
     );
     
     return isset($defaults[$key]) ? $defaults[$key] : $default;
@@ -509,7 +510,8 @@ function theme_translations_render() {
         'last_updated' => 'Letzte Aktualisierung',
         'scroll_left' => 'Scroll left',
         'scroll_right' => 'Scroll right',
-        'birthday_wish' => 'Geburtstagswunsch'
+        'birthday_wish' => 'Geburtstagswunsch',
+        'made_with_love' => 'Erstellt mit ❤️ in 🇨🇭 Zürich'
     );
     
     // English translations
@@ -527,7 +529,8 @@ function theme_translations_render() {
         'last_updated' => 'Last Updated',
         'scroll_left' => 'Scroll left',
         'scroll_right' => 'Scroll right',
-        'birthday_wish' => 'Birthday Wish'
+        'birthday_wish' => 'Birthday Wish',
+        'made_with_love' => 'Made with ❤️ in 🇨🇭 Zürich'
     );
     
     // Albanian translations
@@ -545,7 +548,8 @@ function theme_translations_render() {
         'last_updated' => 'Përditësimi i fundit',
         'scroll_left' => 'Lëviz majtas',
         'scroll_right' => 'Lëviz djathtas',
-        'birthday_wish' => 'Urim ditëlindje'
+        'birthday_wish' => 'Urim ditëlindje',
+        'made_with_love' => 'Bërë me ❤️ në 🇨🇭 Zürich'
     );
     
     // Initialize translations if empty
@@ -588,7 +592,7 @@ function theme_translations_render() {
                                id="trans_<?php echo esc_attr($key); ?>" 
                                name="theme_translations[<?php echo esc_attr($current_lang); ?>][<?php echo esc_attr($key); ?>]" 
                                value="<?php echo esc_attr($value); ?>" 
-                               style="width: 300px;">
+                               style="width: <?php echo ($key === 'made_with_love') ? '400px' : '300px'; ?>;">
                         <span style="color: #666; margin-left: 10px;">Default: <?php echo esc_html($default_value); ?></span>
                     </td>
                 </tr>
