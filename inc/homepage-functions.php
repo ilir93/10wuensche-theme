@@ -177,6 +177,19 @@ function homepage_meta_box_callback($post) {
         var cardsContainer = $('#category_cards_container');
         var cardIndex = cardsContainer.find('.category-card-item').length;
         
+        // Auto-populate title when page is selected
+        $(document).on('change', 'select[name^="homepage_category_cards"][name$="[page_id]"]', function() {
+            var selectedOption = $(this).find('option:selected');
+            var pageTitle = selectedOption.text();
+            var cardItem = $(this).closest('.category-card-item');
+            var titleInput = cardItem.find('input[name$="[title]"]');
+            
+            // Only populate if a page is selected (not the default option) and title field is empty
+            if ($(this).val() && !titleInput.val()) {
+                titleInput.val(pageTitle);
+            }
+        });
+        
         $('#add_category_card').on('click', function() {
             var cardHtml = '<div class="category-card-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 5px;">' +
                 '<div style="display: grid; grid-template-columns: 80px 1fr 150px auto; gap: 10px; align-items: center;">' +
@@ -186,7 +199,7 @@ function homepage_meta_box_callback($post) {
                 '<button type="button" class="remove-category-card" style="padding: 5px 10px; background: #d63638; color: white; border: none; border-radius: 3px; cursor: pointer;">Remove</button>' +
                 '</div>' +
                 '<div style="margin-top: 10px;">' +
-                '<select name="homepage_category_cards[' + cardIndex + '][page_id]" style="width: 100%; padding: 8px;">' +
+                '<select name="homepage_category_cards[' + cardIndex + '][page_id]" style="width: 100%; padding: 8px;" class="page-selector">' +
                 '<option value="">-- Select Page or use URL below --</option>' +
                 <?php
                 $pages = get_pages();
