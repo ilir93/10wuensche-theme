@@ -34,13 +34,39 @@ add_action('after_setup_theme', 'theme_setup');
 
 // Enqueue Scripts and Styles
 function theme_scripts() {
-    // Enqueue main stylesheet
+    // Enqueue main stylesheet with preload for better performance
     wp_enqueue_style('theme-style', get_stylesheet_uri(), array(), '1.0.0');
     
     // Enqueue navigation arrows script with defer for better performance
     wp_enqueue_script('nav-arrows', get_template_directory_uri() . '/js/nav-arrows.js', array(), '1.0.0', true);
 }
 add_action('wp_enqueue_scripts', 'theme_scripts');
+
+// Add preload and resource hints for critical resources
+function add_resource_hints() {
+    // Preload stylesheet
+    echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style">' . "\n";
+    
+    // DNS prefetch for external resources
+    echo '<link rel="dns-prefetch" href="//fonts.googleapis.com">' . "\n";
+    echo '<link rel="dns-prefetch" href="//www.googletagmanager.com">' . "\n";
+    echo '<link rel="dns-prefetch" href="//www.google-analytics.com">' . "\n";
+    
+    // Preconnect to Google Fonts if used
+    echo '<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>' . "\n";
+}
+add_action('wp_head', 'add_resource_hints', 1);
+
+// Inline critical CSS for above-the-fold content
+function inline_critical_css() {
+    ?>
+    <style id="critical-css">
+    /* Critical CSS for above-the-fold content */
+    *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Oxygen','Ubuntu','Cantarell','Fira Sans','Droid Sans','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.site-container{max-width:1200px;margin:0 auto;padding-left:24px;padding-right:24px}.site-header{border-bottom:1px solid #e5e7eb;position:sticky;top:0;background-color:white;z-index:10}.site-branding{padding:0.375rem 0}.site-logo{display:inline-block;font-size:1.25rem;line-height:1.75rem;font-weight:700;text-decoration:none;color:inherit}.main-navigation{position:relative;overflow:hidden}.nav-scroll-container{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}.nav-scroll-container::-webkit-scrollbar{display:none}.menu-items,.main-navigation>ul{display:flex;align-items:center;height:3rem;padding:0;margin:0;list-style:none;white-space:nowrap}.site-content{padding:20px 0}.homepage-hero{text-align:center;margin-bottom:40px;padding:40px 0}.hero-title{font-size:2.75rem;line-height:1.2;font-weight:700;margin:0 0 20px 0;color:#111827}.hero-subtitle{font-size:1.25rem;line-height:1.6;color:#4b5563;margin:0 auto;max-width:600px}
+    </style>
+    <?php
+}
+add_action('wp_head', 'inline_critical_css', 5);
 
 // Enqueue admin scripts for sortable functionality
 function theme_admin_scripts($hook) {
@@ -63,14 +89,37 @@ function theme_admin_scripts($hook) {
 }
 add_action('admin_enqueue_scripts', 'theme_admin_scripts');
 
-// Add defer attribute to navigation script
-function add_defer_attribute($tag, $handle) {
+// Add defer attribute to navigation script and optimize loading
+function optimize_script_loading($tag, $handle) {
+    // Add defer to nav-arrows script
     if ('nav-arrows' === $handle) {
         return str_replace(' src', ' defer src', $tag);
     }
+    
+    // Add async to non-critical scripts
+    $async_scripts = array('google-analytics', 'googletagmanager');
+    foreach ($async_scripts as $async_script) {
+        if (strpos($handle, $async_script) !== false || strpos($tag, $async_script) !== false) {
+            return str_replace(' src', ' async src', $tag);
+        }
+    }
+    
     return $tag;
 }
-add_filter('script_loader_tag', 'add_defer_attribute', 10, 2);
+add_filter('script_loader_tag', 'optimize_script_loading', 10, 2);
+
+// Add loading="lazy" to images by default
+function add_lazy_loading_to_images($content) {
+    // Don't lazy load images above the fold
+    if (is_home() || is_front_page()) {
+        return $content;
+    }
+    
+    return str_replace('<img ', '<img loading="lazy" ', $content);
+}
+add_filter('the_content', 'add_lazy_loading_to_images');
+add_filter('post_thumbnail_html', 'add_lazy_loading_to_images');
+add_filter('get_avatar', 'add_lazy_loading_to_images');
 
 // Remove Query Strings from Static Resources
 function remove_query_strings($src) {

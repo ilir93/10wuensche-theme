@@ -28,6 +28,11 @@ body {
     position: relative;
 }
 
+/* Font display swap for any custom fonts to prevent FOIT */
+@font-face {
+    font-display: swap;
+}
+
 /* Global container for consistent alignment */
 .site-container {
     max-width: 1200px;
@@ -755,6 +760,8 @@ section h1 {
     text-align: center;
     margin-bottom: 40px;
     padding: 40px 0;
+    /* Optimize for LCP */
+    min-height: 200px;
 }
 
 .hero-title {
@@ -763,6 +770,8 @@ section h1 {
     font-weight: 700;
     margin: 0 0 20px 0;
     color: #111827;
+    /* Prevent layout shift */
+    min-height: 3.3rem;
 }
 
 .hero-subtitle {
@@ -771,6 +780,8 @@ section h1 {
     color: #4b5563;
     margin: 0 auto;
     max-width: 600px;
+    /* Prevent layout shift */
+    min-height: 2rem;
 }
 
 /* Category Cards Grid */
