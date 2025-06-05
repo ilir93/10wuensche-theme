@@ -34,11 +34,14 @@ add_action('after_setup_theme', 'theme_setup');
 
 // Enqueue Scripts and Styles
 function theme_scripts() {
-    // Enqueue main stylesheet with preload for better performance
-    wp_enqueue_style('theme-style', get_stylesheet_uri(), array(), '1.0.0');
+    // Get theme version for cache busting
+    $theme_version = wp_get_theme()->get('Version');
+    
+    // Enqueue main stylesheet with version for cache busting
+    wp_enqueue_style('theme-style', get_stylesheet_uri(), array(), $theme_version);
     
     // Enqueue navigation arrows script with defer for better performance
-    wp_enqueue_script('nav-arrows', get_template_directory_uri() . '/js/nav-arrows.js', array(), '1.0.0', true);
+    wp_enqueue_script('nav-arrows', get_template_directory_uri() . '/js/nav-arrows.js', array(), $theme_version, true);
 }
 add_action('wp_enqueue_scripts', 'theme_scripts');
 
@@ -121,7 +124,47 @@ add_filter('the_content', 'add_lazy_loading_to_images');
 add_filter('post_thumbnail_html', 'add_lazy_loading_to_images');
 add_filter('get_avatar', 'add_lazy_loading_to_images');
 
-// Remove Query Strings from Static Resources
+// Add cache headers for static assets
+function add_cache_headers() {
+    // Only add headers for theme assets
+    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+    $theme_dir = '/wp-content/themes/' . get_option('stylesheet');
+    
+    if (strpos($request_uri, $theme_dir) !== false) {
+        // Check file extension
+        $extension = strtolower(pathinfo($request_uri, PATHINFO_EXTENSION));
+        
+        // Set cache headers based on file type
+        switch ($extension) {
+            case 'css':
+            case 'js':
+                header('Cache-Control: public, max-age=31536000, immutable');
+                header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+                break;
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+            case 'gif':
+            case 'webp':
+            case 'svg':
+            case 'ico':
+                header('Cache-Control: public, max-age=31536000');
+                header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+                break;
+            case 'woff':
+            case 'woff2':
+            case 'ttf':
+            case 'otf':
+            case 'eot':
+                header('Cache-Control: public, max-age=31536000');
+                header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+                break;
+        }
+    }
+}
+add_action('send_headers', 'add_cache_headers');
+
+// Remove Query Strings from Static Resources for better caching
 function remove_query_strings($src) {
     if (strpos($src, '?ver=')) {
         $src = remove_query_arg('ver', $src);
@@ -130,6 +173,16 @@ function remove_query_strings($src) {
 }
 add_filter('style_loader_src', 'remove_query_strings', 10, 2);
 add_filter('script_loader_src', 'remove_query_strings', 10, 2);
+
+// Add cache control headers via WordPress
+function add_theme_cache_headers($headers) {
+    if (is_singular() || is_archive() || is_home()) {
+        // Add cache headers for HTML pages
+        $headers['Cache-Control'] = 'public, max-age=3600';
+    }
+    return $headers;
+}
+add_filter('wp_headers', 'add_theme_cache_headers');
 
 // Disable WordPress Block Library CSS for better performance
 function disable_block_css() {
