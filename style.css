@@ -248,6 +248,14 @@ body {
     font-weight: 700;
 }
 
+/* Ensure all H1s in sectioning elements have explicit font-size */
+article h1,
+aside h1,
+nav h1,
+section h1 {
+    font-size: 2.5rem;
+}
+
 /* Meta description below title */
 .page-meta-description {
     margin-bottom: 20px;
