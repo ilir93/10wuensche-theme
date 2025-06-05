@@ -40,7 +40,7 @@ get_header(); ?>
                             <a href="<?php echo esc_url($url); ?>" class="category-card">
                                 <div class="category-card-content">
                                     <span class="category-card-emoji"><?php echo esc_html($card['emoji']); ?></span>
-                                    <h3 class="category-card-title"><?php echo esc_html($card['title']); ?></h3>
+                                    <h2 class="category-card-title"><?php echo esc_html($card['title']); ?></h2>
                                     <span class="category-card-count"><?php echo esc_html($card['count']); ?></span>
                                 </div>
                             </a>
